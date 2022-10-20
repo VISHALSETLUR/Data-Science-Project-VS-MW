@@ -1,0 +1,59 @@
+---
+title: "Data_Science_Project"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,  
+                      warning = FALSE, message = FALSE, 
+                      fig.align = "center",
+                      R.options = list(max.print=100))
+
+# Edit the file starting below
+```
+
+## Title and Introduction
+
+## Tidying
+
+
+
+## Joining/Merging
+
+``` {r}
+# load packages
+
+library(tidyverse)
+
+```
+
+``` {r}
+Bio_Data %>%
+  #left_join(Traditional_Stats_Data, by="PLAYER",suffix=c(".x",".y")) %>%
+  #left_join(Hustle_Data,by="PLAYER",suffix=c(".x",".y")) -> raw_data
+  full_join(Traditional_Stats_Data, by="PLAYER",suffix=c(".x",".y")) %>%
+  full_join(Hustle_Data,by="PLAYER",suffix=c(".x",".y")) -> raw_data
+#join_all(list(Bio_Data,Traditional_Stats_Data,Hustle_Data), by='PLAYER', type='left',suffix=c(".x",".y"))
+raw_data
+
+```
+
+``` {r}
+# Find all duplicate columns containing .x and .y
+raw_data %>%
+  select(contains(".x"),contains(".y"))
+
+# Remove columns containing .y, remove extra index column, remove duplicate columns without suffix (TEAM, AGE, and GP), rename columns ending with .x to just the variable name, print raw_data2
+raw_data2 <- raw_data %>%
+  select(-contains(".y"),-...1,-TEAM,-AGE,-GP) %>%
+  dplyr::rename(TEAM=TEAM.x,"AGE"=AGE.x,"GP"=GP.x,"PTS"=PTS.x,"REB"=REB.x,"AST"=AST.x,"MIN"=MIN.x)
+raw_data2
+
+
+```
+
+## Wrangling
+
+## Visualizing
+
+## Formatting
