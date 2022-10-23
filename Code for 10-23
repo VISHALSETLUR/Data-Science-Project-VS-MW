@@ -1,0 +1,130 @@
+---
+title: "Data_Science_Project"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,  
+                      warning = FALSE, message = FALSE, 
+                      fig.align = "center",
+                      R.options = list(max.print=100))
+
+# Edit the file starting below
+```
+
+## Title and Introduction
+
+## Tidying
+
+
+
+## Joining/Merging
+
+``` {r}
+# load packages and save datasets within R Markdown document, view each dataset
+
+library(tidyverse)
+Bio_Data <- Bio_Data
+Traditional_Stats_Data <- Traditional_Stats_Data
+Hustle_Data <- Hustle_Data
+Bio_Data
+Traditional_Stats_Data
+Hustle_Data
+
+
+```
+
+``` {r}
+Bio_Data %>%
+  #left_join(Traditional_Stats_Data, by="PLAYER",suffix=c(".x",".y")) %>%
+  #left_join(Hustle_Data,by="PLAYER",suffix=c(".x",".y")) -> raw_data
+  full_join(Traditional_Stats_Data, by="PLAYER",suffix=c(".x",".y")) %>%
+  full_join(Hustle_Data,by="PLAYER",suffix=c(".x",".y")) -> raw_data
+#join_all(list(Bio_Data,Traditional_Stats_Data,Hustle_Data), by='PLAYER', type='left',suffix=c(".x",".y"))
+raw_data
+
+```
+
+``` {r}
+# Find all duplicate columns containing .x and .y
+raw_data %>%
+  select(contains(".x"),contains(".y"))
+
+# Remove columns containing .y, remove extra index column, remove duplicate columns without suffix (TEAM, AGE, and GP), rename columns ending with .x to just the variable name, print raw_data2
+revised_data <- raw_data %>%
+  select(-contains(".y"),-...1,-TEAM,-AGE,-GP) %>%
+  rename(TEAM=TEAM.x,"AGE"=AGE.x,"GP"=GP.x,"PTS"=PTS.x,"REB"=REB.x,"AST"=AST.x,"MIN"=MIN.x)
+revised_data
+
+
+```
+
+## Wrangling
+
+``` {r}
+# select function was already used in joining/merging section
+
+# arrange dataset by player name, rename columns to remove white spaces (using gsub) and make lower case
+arranged_data <- revised_data %>%
+  arrange(PLAYER) %>%
+  rename_all(~gsub("\\s+|\\.", "_", .)) %>% 
+  rename_all(~gsub("\\%", "_pct", .)) %>%
+  rename(three_pt_m=`3PM`,three_pt_a=`3PA`,three_pt_pct=`3P_pct`,plus_minus=`+/-`) %>%
+  rename_all(tolower) %>%
+  rename(pct_loose_balls_recovered_off = `_pct_loose_balls_recovered_off`,pct_loose_balls_recovered_def = `_pct_loose_balls_recovered_def`)
+arranged_data
+
+# add variable to dataset using mutate
+arranged_data <- arranged_data %>%
+  mutate(ratio_three_pt = three_pt_a/fga,win_pct=w/(w+l))
+arranged_data
+
+arranged_data %>%
+  filter(age<=30) %>%
+  group_by(age) %>%
+  summarize(mean_pts = mean(pts,na.rm=T))
+
+numeric_summary_stats <- arranged_data %>%
+  summarize(age=summary(age),three_pt_pct=summary(three_pt_pct),contested_shots=summary(contested_shots)) %>%
+  mutate(statistic=c("Min","First_Quartile","Median","Mean","Third_Quartile","Max")) %>%
+  select(statistic,everything()) %>%
+  pivot_longer(cols = c(age,three_pt_pct,contested_shots),
+               names_to = "summary_variable",
+               values_to = "values") %>%
+  pivot_wider(names_from = statistic,
+              values_from = values)
+numeric_summary_stats
+
+arranged_data %>%
+  group_by(country) %>%
+  summarize(count=n())
+
+arranged_data %>%
+  group_by(college) %>%
+  summarize(count=n())
+
+
+
+
+
+
+```
+
+## Visualizing
+
+``` {r}
+arranged_data %>%
+  ggplot(aes(x=three_pt_pct)) +
+  geom_histogram() +
+  labs(x="Three Point Percentage (%)")
+
+arranged_data %>%
+  ggplot(aes(y=three_pt_pct)) +
+  geom_boxplot() +
+  labs(y="Three Point Percentage (%)")
+
+
+
+```
+
+## Formatting
